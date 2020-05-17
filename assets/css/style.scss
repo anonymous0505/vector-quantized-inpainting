@@ -1,0 +1,21 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+.tableFixHead {
+    overflow-y: auto; overflow-x: hidden !important; height: 60vh;
+    & thead th {
+        position: sticky; top: 0;
+    }
+}
+/* Just common table stuff. Really. */
+table  {
+    margin: auto; width: min-content !important;
+}
+th, td {
+    padding: 8px 16px;
+}
+th {
+    background:#eee;
+}

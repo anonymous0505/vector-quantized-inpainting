@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+    
+    <meta charset="UTF-8">
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Interactive Generation Of Spectrograms With Vector-Quantized Inpainting | This is the companion website for the eponymous anonymous ISMIR submission</title>
+<meta name="generator" content="Jekyll v3.8.5" />
+<meta property="og:title" content="Interactive Generation Of Spectrograms With Vector-Quantized Inpainting" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="This is the companion website for the eponymous anonymous ISMIR submission" />
+<meta property="og:description" content="This is the companion website for the eponymous anonymous ISMIR submission" />
+<link rel="canonical" href="http://localhost:4000/" />
+<meta property="og:url" content="http://localhost:4000/" />
+<meta property="og:site_name" content="Interactive Generation Of Spectrograms With Vector-Quantized Inpainting" />
+<script type="application/ld+json">
+{"headline":"Interactive Generation Of Spectrograms With Vector-Quantized Inpainting","url":"http://localhost:4000/","description":"This is the companion website for the eponymous anonymous ISMIR submission","@type":"WebSite","name":"Interactive Generation Of Spectrograms With Vector-Quantized Inpainting","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#157878">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+
+    <script src="http://localhost:35729/livereload.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"
+    onload="renderMathInElement(document.body);"></script>
+
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
+</head>
+<body>
+    <!-- <a id="skip-to-content" href="#content">Skip to the content.</a> -->
+
+    <header class="page-header" role="banner">
+        <h1 class="project-name">Interactive Generation Of Spectrograms With Vector-Quantized Inpainting</h1>
+        <h2 class="project-tagline">This is the companion website for the eponymous anonymous ISMIR submission</h2>
+        
+        
+    </header>
+
+    <main id="content" class="main-content" role="main">
+        <p>This is the companion website for the paper
+Interactive Generation of Spectrograms with Vector-Quantized Inpainting.</p>
+
+<h1 id="introduction">Introduction</h1>
+
+<p>In this paper, we adapt the <a href="https://arxiv.org/abs/1906.00446" title="ArXiV: VQ-VAE-2">VQ-VAE-2 architecture</a> to the interactive generation of sounds.</p>
+
+<p>To this end, we introduce a modified version of the Mel-IF representation proposed in the
+<a href="https://arxiv.org/abs/1902.08710" title="ArXiV: GANSynth">GANSynth paper</a>, that allows to remove irrelevant noise in this representation,
+making it more adapted to quantization via the VQ-VAE-2.</p>
+
+<p>We then follow the approach proposed in the original VQ-VAE-2 paper and generate new sounds by sampling
+from the distribution of codemaps produced the trained VQ-VAE-2.
+This has the advantage of turning the intractable autoregressive modeling of full-scaled \( 1024 \times 128 \) ,
+real-valued spectrograms into just sampling two small discrete codemaps of sizes
+\( 32 \times 4 \) and \( 64 \times 8 \).</p>
+
+<h2 id="vq-vae-2-architecture">VQ-VAE-2 architecture</h2>
+
+<p>The VQ-VAE-2 is a two-layer hierarchical model based on the common VAE encoder-decoder framework and
+was originally introduced for the generation of images. This model learns to encode
+2D images onto two, 2D integer arrays of query indexes: the top codemap and the bottom codemap.</p>
+
+<p>This quantization to integers is performed by learning within each of the two quantized layers a dictionary of code vectors
+onto which the latent encoder representations are projected.
+These two codemaps are conditionally bound. Indeed, the encoder of the VQ-VAE-2 first downsamples
+and quantizes the input image into the bottom map. This first representation is then further
+downsampled and again quantized, yielding the top codemap.</p>
+
+<p>In the decoder, the top codemap is first reconstructed using the code vectors of the learned dictionary.
+This reconstruction is then used as a conditioning information for the decoding of the bottom codemap.</p>
+
+<p>This architecture is represented in the following diagram.</p>
+
+<p><img src="/assets/images/vqvae-simple.png" alt="Placeholder for vqvae diagram image" /></p>
+
+<h2 id="image-like-representation-for-audio">Image-like representation for audio</h2>
+
+<p>In order to directly apply the VQ-VAE-2 architecture to sounds, we introduce a modified
+version of the Mel-IF representation used in the GANSynth model, which helps the VQ-VAE-2
+learn more robust codes by removing irrelevant noise in the phase at low sound amplitude.
+We furthermore tweak the Mel-scale to make it “more logarithmic” by lowering the <em>break frequency</em>,
+resulting in even more resolution in the lower frequencies.</p>
+
+<p>We take the following sound sample as example (sampled from the NSynth validation set).</p>
+
+<p>(/assets/audio/sample.wav)</p>
+
+<p>On the following figure, we display the original, GANSynth-style Mel-IF representation for this sound,
+without phase thresholding and mel-scale compression. We also show the associated top and bottom codemaps
+obtained from a model trained on this representation.</p>
+
+<p><img src="/assets/images/mel_IF-original_gansynth.png" alt="Placeholder for mel-IF representation image" /></p>
+
+<p>We now show the same spectrogram using our modified representation and the associated codemaps,
+obtained from a VQ-VAE-2 trained on these representations.</p>
+
+<p><img src="/assets/images/mel_IF-ours.png" alt="Placeholder for mel-IF representation image" /></p>
+
+<h2 id="sequence-masked-transformers-for-inpainting">Sequence-masked Transformers for inpainting</h2>
+
+<p>Sampling new sounds can now be done dy directly sampling from the joint probability of top and bottom codemaps:
+\[ p(c^{T}, c^{B}) \]
+This probability can be readily factorized using the classic Bayes-rule
+into the following product of conditional probabilities \[ p(c^{T}, c^{B}) = p(c^{T}) * p(c^{B} | c^{T}) \]</p>
+
+<p>We model these two probabilities using two distinct autoregressive Transformers.
+Since we also want to perform inpaiting on the generated sounds,
+that is, resample single tokens in the codemaps for interactive generation,
+the chosen modeling must account for all past and future context of each token.</p>
+
+<p>We furthermore use the strong alignment present between the top and bottom codemap
+to remove some conditional dependencies in the factorized expression of \( p(c^{B} | c^{T}) \). Indeed, since the bottom map is an upsampled version of the bottom map, we model the conditional dependency from top to bottom in the patch-based fashion resulting from this upsampling scheme. We consider that a token \( i \) is conditionally depends only on a single token \( k(i) \) from which it was upsampled.</p>
+
+<p>We therefore model the following two factorized families of probabilities:
+\[
+p(c^{T}) = \prod_{i}{ p(c^{T}_i | c^{T}_{&lt;i}, c^{T}_{&gt;i}) }
+\]</p>
+
+<p>and</p>
+
+<p>\[
+p(c^{B} \vert c^{T}) = \prod_{i}{ p(c^{B}_i | c^{B}_{&lt;i}, c^{T}_{k(i)}) }
+\]</p>
+
+<p>The complete inpainting process is represented in this diagram:</p>
+
+<p><img src="/assets/images/inpainting_process.png" alt="Placeholder for proposed approach diagram" /></p>
+
+<p>On the right-hand side of this diagram we can see the inpainting procedure in action:</p>
+
+<ol>
+  <li>The codemaps extracted by the VQ-VAE-2 encoder are linearized and fed to the Transformers (see paper for details on the linearization shceme),</li>
+  <li>The token circled in pink from the top map is resampled using the conditional probability computed by the top Transformer,</li>
+  <li>The underlying tokens in the aligned bottom map are reseampled according to the conditional probabilities computed by the bottom Transformers.</li>
+  <li>The resulting, inpainted codemaps are decoded back to a spectrogram using the VQ-VAE-2 decoder.</li>
+</ol>
+
+<h1 id="experiments">Experiments</h1>
+
+<p>We now present audio samples for the different components of our approach.</p>
+
+<p>The models were trained on the NSynth dataset, using a custom 80/20 train/valid split since the original was made across instrument types, which is not relevant for our approach.</p>
+
+<h2 id="vq-vae-reconstructions">VQ-VAE reconstructions</h2>
+
+<p>For this first experiment, we only showcase the trained VQ-VAE’s reconstruction ability.</p>
+
+<p>The experimental setup is as follows: we sample 16 random examples from the NSynth validation split and compute their reconstruction using the VQ-VAE-2 encoder.</p>
+
+<div>
+<table class="tableFixHead">
+<colgroup>
+<col />
+<col />
+<col />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Instrument</th>
+<th>Pitch</th>
+<th>Audio</th>
+<th></th>
+</tr>
+</thead>
+<tbody style="overflow-y: scroll; height: 300px">
+
+
+
+
+
+    <tr>
+    <td> Keyboard </td>
+    <td> 56 </td>
+    <td>
+        <table>
+            <tbody>
+            
+            <tr>
+                <td> Orig. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/keyboard_electronic_065-056-075-original.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/keyboard_electronic_065-056-075-original.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/keyboard_electronic_065-056-075-original.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            <tr>
+                <td> Reco. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/keyboard_electronic_065-056-075-reconstruction.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/keyboard_electronic_065-056-075-reconstruction.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/keyboard_electronic_065-056-075-reconstruction.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </td>
+
+    </tr>
+
+    <tr>
+    <td> Reed </td>
+    <td> 64 </td>
+    <td>
+        <table>
+            <tbody>
+            
+            <tr>
+                <td> Orig. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/reed_acoustic_042-064-025-original.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/reed_acoustic_042-064-025-original.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/reed_acoustic_042-064-025-original.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            <tr>
+                <td> Reco. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/reed_acoustic_042-064-025-reconstruction.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/reed_acoustic_042-064-025-reconstruction.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/reed_acoustic_042-064-025-reconstruction.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </td>
+
+    </tr>
+
+    <tr>
+    <td> Mallet </td>
+    <td> 72 </td>
+    <td>
+        <table>
+            <tbody>
+            
+            <tr>
+                <td> Orig. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/mallet_acoustic_000-072-127-original.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/mallet_acoustic_000-072-127-original.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/mallet_acoustic_000-072-127-original.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            <tr>
+                <td> Reco. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/mallet_acoustic_000-072-127-reconstruction.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/mallet_acoustic_000-072-127-reconstruction.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/mallet_acoustic_000-072-127-reconstruction.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </td>
+
+    </tr>
+
+    <tr>
+    <td> String </td>
+    <td> 68 </td>
+    <td>
+        <table>
+            <tbody>
+            
+            <tr>
+                <td> Orig. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/string_acoustic_088-068-100-original.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/string_acoustic_088-068-100-original.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/string_acoustic_088-068-100-original.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            <tr>
+                <td> Reco. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/string_acoustic_088-068-100-reconstruction.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/string_acoustic_088-068-100-reconstruction.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/string_acoustic_088-068-100-reconstruction.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </td>
+
+    </tr>
+
+    <tr>
+    <td> Reed </td>
+    <td> 72 </td>
+    <td>
+        <table>
+            <tbody>
+            
+            <tr>
+                <td> Orig. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/reed_acoustic_060-072-025-original.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/reed_acoustic_060-072-025-original.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/reed_acoustic_060-072-025-original.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            <tr>
+                <td> Reco. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/reed_acoustic_060-072-025-reconstruction.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/reed_acoustic_060-072-025-reconstruction.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/reed_acoustic_060-072-025-reconstruction.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </td>
+
+    </tr>
+
+    <tr>
+    <td> Keyboard </td>
+    <td> 78 </td>
+    <td>
+        <table>
+            <tbody>
+            
+            <tr>
+                <td> Orig. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/keyboard_acoustic_016-078-127-original.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/keyboard_acoustic_016-078-127-original.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/keyboard_acoustic_016-078-127-original.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            <tr>
+                <td> Reco. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/keyboard_acoustic_016-078-127-reconstruction.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/keyboard_acoustic_016-078-127-reconstruction.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/keyboard_acoustic_016-078-127-reconstruction.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </td>
+
+    </tr>
+
+    <tr>
+    <td> Flute </td>
+    <td> 54 </td>
+    <td>
+        <table>
+            <tbody>
+            
+            <tr>
+                <td> Orig. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/flute_acoustic_003-054-127-original.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/flute_acoustic_003-054-127-original.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/flute_acoustic_003-054-127-original.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            <tr>
+                <td> Reco. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/flute_acoustic_003-054-127-reconstruction.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/flute_acoustic_003-054-127-reconstruction.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/flute_acoustic_003-054-127-reconstruction.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </td>
+
+    </tr>
+
+    <tr>
+    <td> Organ </td>
+    <td> 31 </td>
+    <td>
+        <table>
+            <tbody>
+            
+            <tr>
+                <td> Orig. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/organ_electronic_102-031-075-original.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/organ_electronic_102-031-075-original.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/organ_electronic_102-031-075-original.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            <tr>
+                <td> Reco. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/organ_electronic_102-031-075-reconstruction.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/organ_electronic_102-031-075-reconstruction.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/organ_electronic_102-031-075-reconstruction.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </td>
+
+    </tr>
+
+    <tr>
+    <td> Synth_lead </td>
+    <td> 78 </td>
+    <td>
+        <table>
+            <tbody>
+            
+            <tr>
+                <td> Orig. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/synth_lead_synthetic_008-078-025-original.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/synth_lead_synthetic_008-078-025-original.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/synth_lead_synthetic_008-078-025-original.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            <tr>
+                <td> Reco. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/synth_lead_synthetic_008-078-025-reconstruction.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/synth_lead_synthetic_008-078-025-reconstruction.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/synth_lead_synthetic_008-078-025-reconstruction.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </td>
+
+    </tr>
+
+    <tr>
+    <td> Mallet </td>
+    <td> 75 </td>
+    <td>
+        <table>
+            <tbody>
+            
+            <tr>
+                <td> Orig. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/mallet_electronic_001-075-025-original.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/mallet_electronic_001-075-025-original.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/mallet_electronic_001-075-025-original.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            <tr>
+                <td> Reco. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/mallet_electronic_001-075-025-reconstruction.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/mallet_electronic_001-075-025-reconstruction.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/mallet_electronic_001-075-025-reconstruction.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </td>
+
+    </tr>
+
+    <tr>
+    <td> Vocal </td>
+    <td> 65 </td>
+    <td>
+        <table>
+            <tbody>
+            
+            <tr>
+                <td> Orig. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/vocal_acoustic_025-065-127-original.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/vocal_acoustic_025-065-127-original.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/vocal_acoustic_025-065-127-original.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            <tr>
+                <td> Reco. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/vocal_acoustic_025-065-127-reconstruction.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/vocal_acoustic_025-065-127-reconstruction.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/vocal_acoustic_025-065-127-reconstruction.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </td>
+
+    </tr>
+
+    <tr>
+    <td> Guitar </td>
+    <td> 65 </td>
+    <td>
+        <table>
+            <tbody>
+            
+            <tr>
+                <td> Orig. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/guitar_acoustic_016-065-050-original.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/guitar_acoustic_016-065-050-original.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/guitar_acoustic_016-065-050-original.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            <tr>
+                <td> Reco. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/guitar_acoustic_016-065-050-reconstruction.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/guitar_acoustic_016-065-050-reconstruction.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/guitar_acoustic_016-065-050-reconstruction.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </td>
+
+    </tr>
+
+    <tr>
+    <td> Keyboard </td>
+    <td> 61 </td>
+    <td>
+        <table>
+            <tbody>
+            
+            <tr>
+                <td> Orig. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/keyboard_acoustic_003-061-075-original.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/keyboard_acoustic_003-061-075-original.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/keyboard_acoustic_003-061-075-original.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            <tr>
+                <td> Reco. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/keyboard_acoustic_003-061-075-reconstruction.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/keyboard_acoustic_003-061-075-reconstruction.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/keyboard_acoustic_003-061-075-reconstruction.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </td>
+
+    </tr>
+
+    <tr>
+    <td> Bass </td>
+    <td> 41 </td>
+    <td>
+        <table>
+            <tbody>
+            
+            <tr>
+                <td> Orig. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/bass_synthetic_105-041-050-original.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/bass_synthetic_105-041-050-original.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/bass_synthetic_105-041-050-original.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            <tr>
+                <td> Reco. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/bass_synthetic_105-041-050-reconstruction.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/bass_synthetic_105-041-050-reconstruction.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/bass_synthetic_105-041-050-reconstruction.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </td>
+
+    </tr>
+
+    <tr>
+    <td> Bass </td>
+    <td> 47 </td>
+    <td>
+        <table>
+            <tbody>
+            
+            <tr>
+                <td> Orig. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/bass_synthetic_042-047-100-original.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/bass_synthetic_042-047-100-original.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/bass_synthetic_042-047-100-original.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            <tr>
+                <td> Reco. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/bass_synthetic_042-047-100-reconstruction.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/bass_synthetic_042-047-100-reconstruction.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/bass_synthetic_042-047-100-reconstruction.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </td>
+
+    </tr>
+
+    <tr>
+    <td> Synth_lead </td>
+    <td> 37 </td>
+    <td>
+        <table>
+            <tbody>
+            
+            <tr>
+                <td> Orig. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/synth_lead_synthetic_011-037-025-original.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/synth_lead_synthetic_011-037-025-original.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/synth_lead_synthetic_011-037-025-original.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            <tr>
+                <td> Reco. </td>
+                <td>
+                    <audio controls="" preload="none">
+                        
+                            <source src="assets/audio/reconstructions/synth_lead_synthetic_011-037-025-reconstruction.ogg" alt="sample" type="audio/ogg" />
+                        
+                            <source src="assets/audio/reconstructions/synth_lead_synthetic_011-037-025-reconstruction.flac" alt="sample" type="audio/flac" />
+                        
+                            <source src="assets/audio/reconstructions/synth_lead_synthetic_011-037-025-reconstruction.wav" alt="sample" type="audio/wav" />
+                        
+                    </audio>
+                </td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </td>
+
+    </tr>
+
+</tbody>
+</table>
+</div>
+
+
+
+        <footer class="site-footer">
+            
+            <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+        </footer>
+    </main>
+</body>
+</html>

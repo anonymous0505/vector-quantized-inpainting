@@ -1,0 +1,8 @@
+theme: jekyll-theme-cayman
+title: Interactive Generation Of Spectrograms With Vector-Quantized Inpainting
+description: This is the companion website for the eponymous anonymous ISMIR submission
+github: [metadata]
+
+markdown: kramdown
+kramdown:
+    math_engine: katex
