@@ -1,11 +1,7 @@
 ---
+title: Interactive Generation Of Spectrograms With Vector-Quantized Inpainting
 layout: default
 ---
-
-This is the companion website for the paper
-Interactive Generation of Spectrograms with Vector-Quantized Inpainting.
-
-# Introduction
 
 In this paper, we adapt the [VQ-VAE-2 architecture][vq-vae-2] to the interactive generation of sounds.
 
@@ -54,12 +50,35 @@ On the following figure, we display the original, GANSynth-style Mel-IF represen
 without phase thresholding and mel-scale compression. We also show the associated top and bottom codemaps
 obtained from a model trained on this representation.
 
-![Placeholder for mel-IF representation image](/assets/images/mel_IF-original_gansynth.png)
+{% assign vq_vae_short_id = "0839e0" %}
+{% assign vq_vae_id = "20191022-155506-0839e0_156" %}
+|   | Amplitude | IF |
+| ------------- | ------------- | ------------- |
+| Original | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-logmel.png) | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-IF.png)
+| Reconstructed | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-logmel.png) | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-IF.png)
+
+|   | Top |  Bottom |
+| ------------- | ------------- | ------------- |
+| Codemaps   | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-top.png)| ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-bottom.png)|
 
 We now show the same spectrogram using our modified representation and the associated codemaps,
 obtained from a VQ-VAE-2 trained on these representations.
 
-![Placeholder for mel-IF representation image](/assets/images/mel_IF-ours.png)
+{% assign vq_vae_short_id = "d006ab" %}
+{% assign vq_vae_id = "20200309-220303-d006ab_436" %}
+|   | Amplitude | IF |
+| ------------- | ------------- | ------------- |
+| Original | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-logmel.png) | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-IF.png)
+| Reconstructed | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-logmel.png) | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-IF.png)
+
+|   | Top |  Bottom |
+| ------------- | ------------- | ------------- |
+| Codemaps   | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-top.png)| ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-bottom.png)|
+
+Note how the last three columns of the bottom codemap show large homogeneous zones with the same value,
+the transformation indeed pushed the VQ-VAE to learn a more robust representation where silent zones are
+assigned the same code.
+
 
 ## Sequence-masked Transformers for inpainting
 
@@ -69,22 +88,27 @@ This probability can be readily factorized using the classic Bayes-rule
 into the following product of conditional probabilities \\[ p(c^{T}, c^{B}) = p(c^{T}) * p(c^{B} | c^{T}) \\]
 
 We model these two probabilities using two distinct autoregressive Transformers.
-Since we also want to perform inpaiting on the generated sounds,
+Since we also want to perform inpainting on the generated sounds,
 that is, resample single tokens in the codemaps for interactive generation,
 the chosen modeling must account for all past and future context of each token.
 
 We furthermore use the strong alignment present between the top and bottom codemap
-to remove some conditional dependencies in the factorized expression of \\( p(c^{B} | c^{T}) \\). Indeed, since the bottom map is an upsampled version of the bottom map, we model the conditional dependency from top to bottom in the patch-based fashion resulting from this upsampling scheme. We consider that a token \\( i \\) is conditionally depends only on a single token \\( k(i) \\) from which it was upsampled.
+to remove some conditional dependencies in the factorized expression of \\( p(c^{B} | c^{T}) \\).
+Indeed, since the bottom map is an upsampled version of the bottom map,
+we model the conditional dependency from top to bottom in the patch-based fashion
+resulting from this upsampling scheme.
+We consider that a token \\( i \\) is conditionally depends only on a single token
+\\( k(i) \\) from which it was upsampled.
 
 We therefore model the following two factorized families of probabilities:
 \\[
-p(c^{T}) = \prod_{i}{ p(c^{T}\_i | c^{T}\_{\<i}, c^{T}\_{\>i}) }
+p(c^{T}) = \prod_{i}{ p(c^{T}\_i | c^{T}\_{\<i}, m * c^{T}\_{\geq{}i}) }
 \\]
 
 and
 
 \\[
-p(c^{B} \vert c^{T}) = \prod_{i}{ p(c^{B}\_i | c^{B}\_{\<i}, c^{T}\_{k(i)}) }
+p(c^{B} \vert c^{T}) = \prod_{i}{ p(c^{B}\_i | c^{B}\_{\<i}, c^{T}) }
 \\]
 
 The complete inpainting process is represented in this diagram:
@@ -93,9 +117,9 @@ The complete inpainting process is represented in this diagram:
 
 On the right-hand side of this diagram we can see the inpainting procedure in action:
 
-1. The codemaps extracted by the VQ-VAE-2 encoder are linearized and fed to the Transformers (see paper for details on the linearization shceme),
+1. The codemaps extracted by the VQ-VAE-2 encoder are linearized and fed to the Transformers (see paper for details on the linearization scheme),
 2. The token circled in pink from the top map is resampled using the conditional probability computed by the top Transformer,
-3. The underlying tokens in the aligned bottom map are reseampled according to the conditional probabilities computed by the bottom Transformers.
+3. The underlying tokens in the aligned bottom map are resampled according to the conditional probabilities computed by the bottom Transformers.
 4. The resulting, inpainted codemaps are decoded back to a spectrogram using the VQ-VAE-2 decoder.
 
 # Experiments
@@ -109,6 +133,8 @@ The models were trained on the NSynth dataset, using a custom 80/20 train/valid 
 For this first experiment, we only showcase the trained VQ-VAE's reconstruction ability.
 
 The experimental setup is as follows: we sample 16 random examples from the NSynth validation split and compute their reconstruction using the VQ-VAE-2 encoder.
+The following, scrollable table, displays the audio and the spectrograms for the original and reconstructed spectrograms.
+We discuss some noticeable artifacts thereafter, using the <span class="highlight wrong">highlighted samples</span> as reference.
 
 <div markdown="0">
 <table class="tableFixHead">
@@ -119,37 +145,59 @@ The experimental setup is as follows: we sample 16 random examples from the NSyn
 </colgroup>
 <thead>
 <tr class="header">
-<th>Instrument</th>
-<th>Pitch</th>
-<th>Audio</th>
-<th></th>
+<!-- <th>Instrument</th>
+<th>Pitch</th> -->
+<th>Reconstruction comparisons (audio, amplitude, IF)</th>
 </tr>
 </thead>
-<tbody style="overflow-y: scroll; height: 300px">
-
-{% assign formats = "ogg, flac, wav" | split: ", " %}
+<tbody>
+{% assign formats = "wav" | split: ", " %}
 {% assign sample_categories = "original, reconstruction" | split: ", " %}
-
+{% assign spectrogram_channels = "logmel, IF" | split: ", " %}
 {% for sample in site.data.reconstructions %}
-    <tr>
-    <td> {{ sample[1].instrument_family_str | capitalize}} </td>
-    <td> {{ sample[1].pitch }} </td>
+    {% assign is_string_68 = false %}
+    {% assign is_keyboard_78 = false %}
+    {% if sample[1].pitch == 68 and sample[1].instrument_family_str == "string" %}
+        {% assign is_string_68 = true %}
+        {% assign string_68_path = sample[0] %}
+    {% endif %}
+    {% if sample[1].pitch == 78 and sample[1].instrument_family_str == "keyboard" %}
+        {% assign is_keyboard_78 = true %}
+        {% assign keyboard_78_path = sample[0] %}
+    {% endif %}
+    <tr {% if is_string_68 or is_keyboard_78 %} class="highlight wrong" {% endif %}>
+    <!-- <td> {{ sample[1].instrument_family_str | capitalize}} </td> -->
+    <!-- <td> {{ sample[1].pitch }} </td> -->
     <td>
         <table>
             <tbody>
-            {% for sample_category in sample_categories %}
-            <tr>
-                <td> {{ sample_category | capitalize | truncate: 5, "." }} </td>
-                <td>
-                    <audio controls preload="none">
-                        {% for format in formats %}
-                            <source src="{{ site.baseurl }}assets/audio/reconstructions/{{ sample[0] }}-{{sample_category}}.{{ format }}"
-                                alt="sample" type="audio/{{ format }}">
-                        {% endfor %}
-                    </audio>
-                </td>
-            </tr>
-            {% endfor %}
+                {% for sample_category in sample_categories %}
+                    <tr>
+                        <td> {{ sample_category | capitalize | truncate: 5, "." }} </td>
+                        <td>
+                            <audio controls preload="none">
+                                {% for format in formats %}
+                                    <source src="{{ site.baseurl }}assets/audio/reconstructions/{{ sample[0] }}-{{sample_category}}.{{ format }}"
+                                        alt="sample" type="audio/{{ format }}">
+                                {% endfor %}
+                            </audio>
+                        </td>
+                        <td>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        {% for spectrogram_channel in spectrogram_channels %}
+                                            <td>
+                                                <img src="{{ site.baseurl }}assets/images/reconstructions/{{ sample[0] }}-{{ sample_category }}-{{ spectrogram_channel }}.png"
+                                                    alt="{{ sample[0] }}-{{ sample_category }}-{{ spectrogram_channel }}" width="100%" height="100%"/>
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                {% endfor %}
             </tbody>
         </table>
     </td>
@@ -159,6 +207,86 @@ The experimental setup is as follows: we sample 16 random examples from the NSyn
 </tbody>
 </table>
 </div>
+
+### Discussion
+
+From these examples we can note that reconstruction with this highly compressed model
+is good, in the sense the overall timbre is indeed reproduced for each of the samples, yet it is not perfect.
+
+Two main artifacts can be noticed:
+
+{% capture sample_paths %}{{keyboard_78_path}}, {{string_68_path}}{% endcapture %}
+{% assign discussion_sample_paths = sample_paths | split: ", " %}
+
+{% for sample_path in discussion_sample_paths %}
+{% if sample_path == keyboard_78_path %}
+
+#### Transients
+
+Transient parts, amongst which attacks, tend to be blurred out, such as in the Keyboard - 78 example, reproduced below.
+{% endif %}
+
+{% if sample_path == string_68_path %}
+
+#### Vibratos
+
+Vibratos are reproduced albeit not necessarily at the correct frequency, such as in the String - 68 example, where the reconstructed vibrato's frequency is higher than the original one.
+{% endif %}
+
+<table>
+    <tbody>
+        {% for sample_category in sample_categories %}
+            <tr>
+                <td> {{ sample_category | capitalize | truncate: 5, "." }} </td>
+                <td>
+                    <audio controls preload="none">
+                        {% for format in formats %}
+                            <source src="{{ site.baseurl }}assets/audio/reconstructions/{{ sample_path }}-{{sample_category}}.{{ format }}"
+                                alt="sample" type="audio/{{ format }}">
+                        {% endfor %}
+                    </audio>
+                </td>
+                <td>
+                    <table>
+                        <tbody>
+                            <tr>
+                                {% for spectrogram_channel in spectrogram_channels %}
+                                    <td>
+                                        <img src="{{ site.baseurl }}assets/images/reconstructions/{{ sample_path }}-{{ sample_category }}-{{ spectrogram_channel }}.png"
+                                            alt="{{ sample_path }}-{{ sample_category }}-{{ spectrogram_channel }}" width="100%" height="100%"/>
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if sample_path == keyboard_78_path %}
+
+This is likely cause by the the low temporal resolution of the VQ-VAE-2 we employ, where the bottom codemap only operates
+over frames of duration 0.5 second! This could be tackled by increasing the resolution of the codemaps, but at the cost of
+increasing the computational load in the subsequent autoregressive modeling by the Transformers.
+{% endif %}
+
+{% if sample_path == string_68_path %}
+
+This could be due to the reconstructed spectrogram being too smooth to reproduce the complex timbre, leading to this beating artifacts because of lacking harmonics. This could be addressed by either adding a noise component in the VQ-VAE or increasing the network's capacity, for instance by increasing
+the codebooks' size, allowiong the network to learn a more diverse set of spectral patches.
+{% endif %}
+
+
+{% endfor %}
+
+Nevertheless, one should bear in might the very strong compression induced by the VQ-VAE.
+Indeed, the model weights are only \\(5.7\text{Mb}\\) in size and a 4 seconds sound sampled
+at \\(16kHz\\), representing a \\(128\text{kb}\\) file size, is compressed into a total of
+\\( 640 = 64 * 8 + 32 * 4 \\) 8-bit integers, that is, less than \\(1\text{kb}\\). The model
+in turn was trained to perform appropriate reconstruction on 180000 training samples with diverse
+timbre.
 
 [vq-vae-2]: https://arxiv.org/abs/1906.00446 "ArXiV: VQ-VAE-2"
 [gansynth]: https://arxiv.org/abs/1902.08710 "ArXiV: GANSynth"
