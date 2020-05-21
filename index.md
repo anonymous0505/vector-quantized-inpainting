@@ -15,7 +15,10 @@ This has the advantage of turning the intractable autoregressive modeling of ful
 real-valued spectrograms into just sampling two small discrete codemaps of sizes
 \\( 32 \times 4 \\) and \\( 64 \times 8 \\).
 
-## VQ-VAE-2 architecture
+* //Will be replaced by table of content//
+{:toc}
+
+# VQ-VAE-2 Architecture
 
 The VQ-VAE-2 is a two-layer hierarchical model based on the common VAE encoder-decoder framework and
 was originally introduced for the generation of images. This model learns to encode
@@ -34,7 +37,7 @@ This architecture is represented in the following diagram.
 
 ![Placeholder for vqvae diagram image](/assets/images/vqvae-simple.png)
 
-## Image-like representation for audio
+# Image-like Representation for Audio
 
 In order to directly apply the VQ-VAE-2 architecture to sounds, we introduce a modified
 version of the Mel-IF representation used in the GANSynth model, which helps the VQ-VAE-2
@@ -79,36 +82,30 @@ Note how the last three columns of the bottom codemap show large homogeneous zon
 the transformation indeed pushed the VQ-VAE to learn a more robust representation where silent zones are
 assigned the same code.
 
-
-## Sequence-masked Transformers for inpainting
+# Sequence-masked Transformers for Inpainting
 
 Sampling new sounds can now be done dy directly sampling from the joint probability of top and bottom codemaps:
 \\[ p(c^{T}, c^{B}) \\]
 This probability can be readily factorized using the classic Bayes-rule
-into the following product of conditional probabilities \\[ p(c^{T}, c^{B}) = p(c^{T}) * p(c^{B} | c^{T}) \\]
+into the following product of conditional probabilities \\[ p(c^{T}, c^{B}) = p(c^{T}) p(c^{B} | c^{T}) \\]
 
 We model these two probabilities using two distinct autoregressive Transformers.
 Since we also want to perform inpainting on the generated sounds,
 that is, resample single tokens in the codemaps for interactive generation,
-the chosen modeling must account for all past and future context of each token.
+the chosen modeling must allow to account for both the past and future context of each token.
 
-We furthermore use the strong alignment present between the top and bottom codemap
-to remove some conditional dependencies in the factorized expression of \\( p(c^{B} | c^{T}) \\).
-Indeed, since the bottom map is an upsampled version of the bottom map,
-we model the conditional dependency from top to bottom in the patch-based fashion
-resulting from this upsampling scheme.
-We consider that a token \\( i \\) is conditionally depends only on a single token
-\\( k(i) \\) from which it was upsampled.
+For the top codemaps, we selectively incorporate information from the relevant future tokens
+using a boolean mask \\( m \\), the _inpainting_ mask.
 
-We therefore model the following two factorized families of probabilities:
 \\[
-p(c^{T}) = \prod_{i}{ p(c^{T}\_i | c^{T}\_{\<i}, m * c^{T}\_{\geq{}i}) }
+p(c^{T}) \rightsquigarrow{} { p(c^{T}\_i | c^{T}\_{\<i}, m \odot{} c^{T}\_{\geq{}i}) }
 \\]
 
-and
+For the bottom codemap, we perform common autoregressive modeling whilst incorporating
+conditioning from the top codemap:
 
 \\[
-p(c^{B} \vert c^{T}) = \prod_{i}{ p(c^{B}\_i | c^{B}\_{\<i}, c^{T}) }
+p(c^{B} \vert c^{T}) = \prod_i{ p(c^{B}\_i | c^{B}\_{\<i}, c^{T}) }
 \\]
 
 The complete inpainting process is represented in this diagram:
@@ -209,11 +206,10 @@ We discuss some noticeable artifacts thereafter, using the <span class="highligh
 </div>
 
 ### Discussion
+{:.no_toc}
 
 From these examples we can note that reconstruction with this highly compressed model
 is good, in the sense the overall timbre is indeed reproduced for each of the samples, yet it is not perfect.
-
-Two main artifacts can be noticed:
 
 {% capture sample_paths %}{{keyboard_78_path}}, {{string_68_path}}{% endcapture %}
 {% assign discussion_sample_paths = sample_paths | split: ", " %}
@@ -222,15 +218,19 @@ Two main artifacts can be noticed:
 {% if sample_path == keyboard_78_path %}
 
 #### Transients
+{:.no_toc}
 
 Transient parts, amongst which attacks, tend to be blurred out, such as in the Keyboard - 78 example, reproduced below.
 {% endif %}
 
 {% if sample_path == string_68_path %}
 
-#### Vibratos
+#### Beating frequencies
+{:.no_toc}
 
-Vibratos are reproduced albeit not necessarily at the correct frequency, such as in the String - 68 example, where the reconstructed vibrato's frequency is higher than the original one.
+Some undesired beating effects appear on sustained notes. An instance of this is on the reconstruction of the String - 68 sample.
+
+
 {% endif %}
 
 <table>
@@ -268,16 +268,20 @@ Vibratos are reproduced albeit not necessarily at the correct frequency, such as
 {% if sample_path == keyboard_78_path %}
 
 This is likely cause by the the low temporal resolution of the VQ-VAE-2 we employ, where the bottom codemap only operates
-over frames of duration 0.5 second! This could be tackled by increasing the resolution of the codemaps, but at the cost of
+over frames of duration 0.5 second.
+
+This limitation could be directly tackled by increasing the resolution of the codemaps, but at the cost of
 increasing the computational load in the subsequent autoregressive modeling by the Transformers.
 {% endif %}
 
 {% if sample_path == string_68_path %}
 
-This could be due to the reconstructed spectrogram being too smooth to reproduce the complex timbre, leading to this beating artifacts because of lacking harmonics. This could be addressed by either adding a noise component in the VQ-VAE or increasing the network's capacity, for instance by increasing
-the codebooks' size, allowiong the network to learn a more diverse set of spectral patches.
+This could be due to the reconstructed spectrogram being too smooth to reproduce the complex timbre,
+leading to this beating artifacts because of missing harmonics.
+This could be addressed by either adding a noise component in the VQ-VAE or increasing
+the network's capacity, for instance by increasing the codebooks' size, allowing the VQ-VAE to
+learn a more diverse set of spectral patches.
 {% endif %}
-
 
 {% endfor %}
 
@@ -285,8 +289,16 @@ Nevertheless, one should bear in might the very strong compression induced by th
 Indeed, the model weights are only \\(5.7\text{Mb}\\) in size and a 4 seconds sound sampled
 at \\(16kHz\\), representing a \\(128\text{kb}\\) file size, is compressed into a total of
 \\( 640 = 64 * 8 + 32 * 4 \\) 8-bit integers, that is, less than \\(1\text{kb}\\). The model
-in turn was trained to perform appropriate reconstruction on 180000 training samples with diverse
+in turn was trained to perform appropriate reconstruction on \(180000\) training samples with diverse
 timbre.
+
+## Unconditional Generation
+
+In this second set of experiments, we make use of the Transformers and evaluate their
+ability at generating full sounds without any original codemap.
+
+We only condition the generation on pitch and instrument labels.
+
 
 [vq-vae-2]: https://arxiv.org/abs/1906.00446 "ArXiV: VQ-VAE-2"
 [gansynth]: https://arxiv.org/abs/1902.08710 "ArXiV: GANSynth"
