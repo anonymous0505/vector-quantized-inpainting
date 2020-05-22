@@ -57,12 +57,12 @@ obtained from a model trained on this representation.
 {% assign vq_vae_id = "20191022-155506-0839e0_156" %}
 |   | Amplitude | IF |
 | ------------- | ------------- | ------------- |
-| Original | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-logmel.png) | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-IF.png)
-| Reconstructed | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-logmel.png) | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-IF.png)
+| Original | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-logmel.png) | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-IF.png)
+| Reconstructed | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-logmel.png) | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-IF.png)
 
 |   | Top |  Bottom |
 | ------------- | ------------- | ------------- |
-| Codemaps   | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-top.png)| ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-bottom.png)|
+| Codemaps   | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-top.png)| ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-bottom.png)|
 
 We now show the same spectrogram using our modified representation and the associated codemaps,
 obtained from a VQ-VAE-2 trained on these representations.
@@ -71,12 +71,12 @@ obtained from a VQ-VAE-2 trained on these representations.
 {% assign vq_vae_id = "20200309-220303-d006ab_436" %}
 |   | Amplitude | IF |
 | ------------- | ------------- | ------------- |
-| Original | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-logmel.png) | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-IF.png)
-| Reconstructed | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-logmel.png) | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-IF.png)
+| Original | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-logmel.png) | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-IF.png)
+| Reconstructed | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-logmel.png) | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-IF.png)
 
 |   | Top |  Bottom |
 | ------------- | ------------- | ------------- |
-| Codemaps   | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-top.png)| ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-bottom.png)|
+| Codemaps   | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-top.png)| ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-bottom.png)|
 
 Note how the last three columns of the bottom codemap show large homogeneous zones with the same value,
 the transformation indeed pushed the VQ-VAE to learn a more robust representation where silent zones are
