@@ -35,7 +35,7 @@ This reconstruction is then used as a conditioning information for the decoding 
 
 This architecture is represented in the following diagram.
 
-![Placeholder for vqvae diagram image](/assets/images/vqvae-simple.png)
+![Placeholder for vqvae diagram image]({{ site.baseurl }}/assets/images/vqvae-simple.png)
 
 # Image-like Representation for Audio
 
@@ -57,12 +57,12 @@ obtained from a model trained on this representation.
 {% assign vq_vae_id = "20191022-155506-0839e0_156" %}
 |   | Amplitude | IF |
 | ------------- | ------------- | ------------- |
-| Original | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-logmel.png) | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-IF.png)
+| Original | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-logmel.png) | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-IF.png)
 | Reconstructed | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-logmel.png) | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-IF.png)
 
 |   | Top |  Bottom |
 | ------------- | ------------- | ------------- |
-| Codemaps   | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-top.png)| ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-bottom.png)|
+| Codemaps   | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-top.png)| ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-bottom.png)|
 
 We now show the same spectrogram using our modified representation and the associated codemaps,
 obtained from a VQ-VAE-2 trained on these representations.
@@ -71,12 +71,12 @@ obtained from a VQ-VAE-2 trained on these representations.
 {% assign vq_vae_id = "20200309-220303-d006ab_436" %}
 |   | Amplitude | IF |
 | ------------- | ------------- | ------------- |
-| Original | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-logmel.png) | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-IF.png)
+| Original | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-logmel.png) | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-IF.png)
 | Reconstructed | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-logmel.png) | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-IF.png)
 
 |   | Top |  Bottom |
 | ------------- | ------------- | ------------- |
-| Codemaps   | ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-top.png)| ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-bottom.png)|
+| Codemaps   | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-top.png)| ![](/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-bottom.png)|
 
 Note how the last three columns of the bottom codemap show large homogeneous zones with the same value,
 the transformation indeed pushed the VQ-VAE to learn a more robust representation where silent zones are
@@ -110,7 +110,7 @@ p(c^{B} \vert c^{T}) = \prod_i{ p(c^{B}\_i | c^{B}\_{\<i}, c^{T}) }
 
 The complete inpainting process is represented in this diagram:
 
-![Placeholder for proposed approach diagram](/assets/images/inpainting_process.png)
+![Placeholder for proposed approach diagram]({{ site.baseurl }}/assets/images/inpainting_process.png)
 
 On the right-hand side of this diagram we can see the inpainting procedure in action:
 
@@ -174,7 +174,7 @@ We discuss some noticeable artifacts thereafter, using the <span class="highligh
                         <td>
                             <audio controls preload="none">
                                 {% for format in formats %}
-                                    <source src="{{ site.baseurl }}assets/audio/reconstructions/{{ sample[0] }}-{{sample_category}}.{{ format }}"
+                                    <source src="{{ site.baseurl }}/assets/audio/reconstructions/{{ sample[0] }}-{{sample_category}}.{{ format }}"
                                         alt="sample" type="audio/{{ format }}">
                                 {% endfor %}
                             </audio>
@@ -185,7 +185,7 @@ We discuss some noticeable artifacts thereafter, using the <span class="highligh
                                     <tr>
                                         {% for spectrogram_channel in spectrogram_channels %}
                                             <td>
-                                                <img src="{{ site.baseurl }}assets/images/reconstructions/{{ sample[0] }}-{{ sample_category }}-{{ spectrogram_channel }}.png"
+                                                <img src="{{ site.baseurl }}/assets/images/reconstructions/{{ sample[0] }}-{{ sample_category }}-{{ spectrogram_channel }}.png"
                                                     alt="{{ sample[0] }}-{{ sample_category }}-{{ spectrogram_channel }}" width="100%" height="100%"/>
                                             </td>
                                         {% endfor %}
@@ -241,7 +241,7 @@ Some undesired beating effects appear on sustained notes. An instance of this is
                 <td>
                     <audio controls preload="none">
                         {% for format in formats %}
-                            <source src="{{ site.baseurl }}assets/audio/reconstructions/{{ sample_path }}-{{sample_category}}.{{ format }}"
+                            <source src="{{ site.baseurl }}/assets/audio/reconstructions/{{ sample_path }}-{{sample_category}}.{{ format }}"
                                 alt="sample" type="audio/{{ format }}">
                         {% endfor %}
                     </audio>
@@ -252,7 +252,7 @@ Some undesired beating effects appear on sustained notes. An instance of this is
                             <tr>
                                 {% for spectrogram_channel in spectrogram_channels %}
                                     <td>
-                                        <img src="{{ site.baseurl }}assets/images/reconstructions/{{ sample_path }}-{{ sample_category }}-{{ spectrogram_channel }}.png"
+                                        <img src="{{ site.baseurl }}/assets/images/reconstructions/{{ sample_path }}-{{ sample_category }}-{{ spectrogram_channel }}.png"
                                             alt="{{ sample_path }}-{{ sample_category }}-{{ spectrogram_channel }}" width="100%" height="100%"/>
                                     </td>
                                 {% endfor %}
