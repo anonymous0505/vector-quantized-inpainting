@@ -59,7 +59,7 @@ obtained from a model trained on this representation.
 |   | Amplitude | IF |
 | ------------- | ------------- | ------------- |
 | Original | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-logmel.png) | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-IF.png)
-| Reconstructed | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-logmel.png) | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-IF.png)
+| Reconstruction | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-logmel.png) | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-IF.png)
 
 |   | Top |  Bottom |
 | ------------- | ------------- | ------------- |
@@ -73,7 +73,7 @@ obtained from a VQ-VAE-2 trained on these representations.
 |   | Amplitude | IF |
 | ------------- | ------------- | ------------- |
 | Original | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-logmel.png) | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-original-IF.png)
-| Reconstructed | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-logmel.png) | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-IF.png)
+| Reconstruction | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-logmel.png) | ![]({{ site.baseurl }}/assets/images/spectrograms_comparison/vqvae-{{ vq_vae_short_id }}/brass_acoustic_040-069-075-{{vq_vae_id}}-reconstruction-IF.png)
 
 |   | Top |  Bottom |
 | ------------- | ------------- | ------------- |
@@ -131,7 +131,7 @@ The models were trained on the NSynth dataset, using a custom 80/20 train/valid 
 For this first experiment, we only showcase the trained VQ-VAE's reconstruction ability.
 
 The experimental setup is as follows: we sample 16 random examples from the NSynth validation split and compute their reconstruction using the VQ-VAE-2 encoder.
-The following, scrollable table, displays the audio and the spectrograms for the original and reconstructed spectrograms.
+The following (scrollable) table displays the audio and the spectrograms for the original and reconstructed spectrograms.
 We discuss some noticeable artifacts thereafter, using the <span class="highlight wrong">highlighted samples</span> as reference.
 
 <div markdown="0">
@@ -143,9 +143,9 @@ We discuss some noticeable artifacts thereafter, using the <span class="highligh
 </colgroup>
 <thead>
 <tr class="header">
-<!-- <th>Instrument</th>
-<th>Pitch</th> -->
-<th>Reconstruction comparisons (audio, amplitude, IF)</th>
+<th>Kind + Audio</th>
+<th>Mel-Amplitude</th>
+<th>Mel-IF</th>
 </tr>
 </thead>
 <tbody>
@@ -163,16 +163,13 @@ We discuss some noticeable artifacts thereafter, using the <span class="highligh
         {% assign is_keyboard_78 = true %}
         {% assign keyboard_78_path = sample[0] %}
     {% endif %}
-    <tr {% if is_string_68 or is_keyboard_78 %} class="highlight wrong" {% endif %}>
-    <!-- <td> {{ sample[1].instrument_family_str | capitalize}} </td> -->
-    <!-- <td> {{ sample[1].pitch }} </td> -->
-    <td>
-        <table>
-            <tbody>
                 {% for sample_category in sample_categories %}
-                    <tr>
-                        <td> {{ sample_category | capitalize | truncate: 5, "." }} </td>
-                        <td>
+    <tr {% if is_string_68 or is_keyboard_78 %} class="highlight wrong" {% endif %}>
+        <!-- <td> {{ sample_category | capitalize | truncate: 5, "." }} </td> -->
+        <td>
+            {{ sample_category | capitalize }}
+            <br/>
+            <br/>
                             <audio controls preload="none">
                                 {% for format in formats %}
                                     <source src="{{ site.baseurl }}/assets/audio/reconstructions/{{ sample[0] }}-{{sample_category}}.{{ format }}"
@@ -180,10 +177,6 @@ We discuss some noticeable artifacts thereafter, using the <span class="highligh
                                 {% endfor %}
                             </audio>
                         </td>
-                        <td>
-                            <table>
-                                <tbody>
-                                    <tr>
                                         {% for spectrogram_channel in spectrogram_channels %}
                                             <td>
                                                 <img src="{{ site.baseurl }}/assets/images/reconstructions/{{ sample[0] }}-{{ sample_category }}-{{ spectrogram_channel }}.png"
@@ -191,16 +184,7 @@ We discuss some noticeable artifacts thereafter, using the <span class="highligh
                                             </td>
                                         {% endfor %}
                                     </tr>
-                                </tbody>
-                            </table>
-                        </td>
-                    </tr>
                 {% endfor %}
-            </tbody>
-        </table>
-    </td>
-
-    </tr>
 {% endfor %}
 </tbody>
 </table>
@@ -235,11 +219,25 @@ Some undesired beating effects appear on sustained notes. An instance of this is
 {% endif %}
 
 <table>
+    <colgroup>
+    <col/>
+    <col/>
+    <col/>
+    </colgroup>
+    <thead>
+    <tr class="header">
+    <th>Kind + Audio</th>
+    <th>Mel-Amplitude</th>
+    <th>Mel-IF</th>
+    </tr>
+    </thead>
     <tbody>
         {% for sample_category in sample_categories %}
             <tr>
-                <td> {{ sample_category | capitalize | truncate: 5, "." }} </td>
                 <td>
+                    {{ sample_category | capitalize }}
+                    <br/>
+                    <br/>
                     <audio controls preload="none">
                         {% for format in formats %}
                             <source src="{{ site.baseurl }}/assets/audio/reconstructions/{{ sample_path }}-{{sample_category}}.{{ format }}"
@@ -247,10 +245,6 @@ Some undesired beating effects appear on sustained notes. An instance of this is
                         {% endfor %}
                     </audio>
                 </td>
-                <td>
-                    <table>
-                        <tbody>
-                            <tr>
                                 {% for spectrogram_channel in spectrogram_channels %}
                                     <td>
                                         <img src="{{ site.baseurl }}/assets/images/reconstructions/{{ sample_path }}-{{ sample_category }}-{{ spectrogram_channel }}.png"
@@ -258,10 +252,6 @@ Some undesired beating effects appear on sustained notes. An instance of this is
                                     </td>
                                 {% endfor %}
                             </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
         {% endfor %}
     </tbody>
 </table>
@@ -304,7 +294,7 @@ pitch and instrument type.
 {% assign unconditional_sampling_pitches = "24, 31, 38, 45, 52, 59, 66, 73, 80" | split: ", " %}
 <table class="tableFixFirstColumn tableFixHead full-size">
     <colgroup>
-        <col">
+        <col>
         {% for pitch in unconditional_sampling_pitches %}
         <col/>
         {% endfor %}

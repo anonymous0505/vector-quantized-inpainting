@@ -3,6 +3,10 @@
 
 @import "{{ site.theme }}";
 
+body {
+    overflow-x: hidden;
+}
+
 .tableFixHead {
     overflow-y: auto;
     max-height: 70vh;
@@ -36,12 +40,18 @@
 table  {
     // width: 70vw !important;
 }
+
 th, td {
+    text-align: center;
+
     & img {
-        // width: 100%;
-        // height: 100%;
+        margin: auto;
+        min-width: 100px;
+
+        @media screen and (max-width: 42em) {
+            max-height: 15vh;
+        }
     }
-    // padding: 8px 16px;
 }
 th {
     background:#eee;
