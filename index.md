@@ -45,9 +45,10 @@ learn more robust codes by removing irrelevant noise in the phase at low sound a
 We furthermore tweak the Mel-scale to make it "more logarithmic" by lowering the _break frequency_,
 resulting in even more resolution in the lower frequencies.
 
-We take the following sound sample as example (sampled from the NSynth validation set).
+We take the following sound sample as example (sampled from the validation set of our custom NSynth split).
 
-(/assets/audio/sample.wav)
+<audio controls preload="none" src="{{ site.baseurl }}/assets/audio/brass_acoustic_040-069-075.wav"
+ type="audio/wav" />
 
 On the following figure, we display the original, GANSynth-style Mel-IF representation for this sound,
 without phase thresholding and mel-scale compression. We also show the associated top and bottom codemaps

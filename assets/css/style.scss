@@ -72,6 +72,11 @@ audio {
     width: 130px;
 }
 
+.main-content > audio {
+    width: 33.3%;
+    margin-left: 33.3%;
+}
+
 .full-size {
     @media screen and (min-width: 64em) {
         width: 80vw !important;
