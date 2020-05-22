@@ -295,10 +295,44 @@ timbre.
 ## Unconditional Generation
 
 In this second set of experiments, we make use of the Transformers and evaluate their
-ability at generating full sounds without any original codemap.
+ability at generating full sounds without receiving any conditioning except
+pitch and instrument type.
 
-We only condition the generation on pitch and instrument labels.
-
+<div markdown="0">
+{% assign instrument_types = "bass, brass, flute, guitar, keyboard, mallet, organ, reed, string, synth_lead, vocal" | split: ", " %}
+{% assign unconditional_sampling_pitches = "24, 31, 38, 45, 52, 59, 66, 73, 80" | split: ", " %}
+<table class="tableFixFirstColumn tableFixHead full-size">
+    <colgroup>
+        <col">
+        {% for pitch in unconditional_sampling_pitches %}
+        <col/>
+        {% endfor %}
+    </colgroup>
+    <thead>
+        <tr class="header">
+        <th> Instrument </th>
+        {% for pitch in unconditional_sampling_pitches %}
+        <th> MIDI Pitch <span markdown="1">\\({{ pitch }}\\)</span> </th>
+        {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+    {% for instrument_type in instrument_types %}
+        <tr>
+        <th> {{ instrument_type | capitalize }} </th>
+        {% for pitch in unconditional_sampling_pitches %}
+            <td>
+                <audio controls
+                 src='{{ site.baseurl }}/assets/audio/unconditional_generation/20200309-220303-d006ab_436/{{instrument_type}}-{{pitch}}.wav'
+                 preload="none"
+                 format='audio/wav' />
+            </td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
 
 [vq-vae-2]: https://arxiv.org/abs/1906.00446 "ArXiV: VQ-VAE-2"
 [gansynth]: https://arxiv.org/abs/1902.08710 "ArXiV: GANSynth"
