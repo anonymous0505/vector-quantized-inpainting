@@ -213,8 +213,7 @@ Transient parts, amongst which attacks, tend to be blurred out, such as in the K
 #### Beating frequencies
 {:.no_toc}
 
-Some undesired beating effects appear on sustained notes. An instance of this is on the reconstruction of the String - 68 sample.
-
+Some undesired beating effects appear on sustained notes. An instance of this is in the reconstruction of the String - 68 sample.
 
 {% endif %}
 
@@ -258,30 +257,44 @@ Some undesired beating effects appear on sustained notes. An instance of this is
 
 {% if sample_path == keyboard_78_path %}
 
-This is likely cause by the the low temporal resolution of the VQ-VAE-2 we employ, where the bottom codemap only operates
+This is likely cause by the low temporal resolution of the VQ-VAE-2 we employ, where the bottom codemap only operates
 over frames of duration 0.5 second.
 
 This limitation could be directly tackled by increasing the resolution of the codemaps, but at the cost of
 increasing the computational load in the subsequent autoregressive modeling by the Transformers.
+
+Another possible solution would be to add a noise component in the VQ-VAE, effectively turning the
+synthesis process into a _harmonics+noise_ one, as is done in the [DDSP model](ddsp).
+In this model, the network learns to generate both a set of additive harmonics as well as a FIR filter which
+is applied on a noise generator to reconstruct noisy components of the input signal.
+This second technique is grounded in a practice of introducing powerful inductive biases
+into the architecture of a model in order to ease its learning process.
+
 {% endif %}
 
 {% if sample_path == string_68_path %}
 
 This could be due to the reconstructed spectrogram being too smooth to reproduce the complex timbre,
 leading to this beating artifacts because of missing harmonics.
-This could be addressed by either adding a noise component in the VQ-VAE or increasing
-the network's capacity, for instance by increasing the codebooks' size, allowing the VQ-VAE to
-learn a more diverse set of spectral patches.
+
+A first, somewhat brute-force solution would be to increase the network's capacity, which can
+be readily done by increasing the codebooks' size. This would allowing the VQ-VAE to learn a more diverse
+set of spectral patches, again at the cost of increased computational load.
+
+Notwithstanding, adding a noise component to the model could again help it account for this
+variability.
+
+Testing these possible enhancements will be the subject of follow-up work.
 {% endif %}
 
 {% endfor %}
 
-Nevertheless, one should bear in might the very strong compression induced by the VQ-VAE.
+<!-- Nevertheless, one should bear in mind the very strong compression induced by the VQ-VAE.
 Indeed, the model weights are only \\(5.7\text{Mb}\\) in size and a 4 seconds sound sampled
 at \\(16kHz\\), representing a \\(128\text{kb}\\) file size, is compressed into a total of
 \\( 640 = 64 * 8 + 32 * 4 \\) 8-bit integers, that is, less than \\(1\text{kb}\\). The model
-in turn was trained to perform appropriate reconstruction on \(180000\) training samples with diverse
-timbre.
+in turn was trained to perform appropriate reconstruction on \\(180000\\) training samples with diverse
+timbre. -->
 
 ## Unconditional Generation
 
@@ -326,4 +339,5 @@ pitch and instrument type.
 </div>
 
 [vq-vae-2]: https://arxiv.org/abs/1906.00446 "ArXiV: VQ-VAE-2"
+[ddsp]: https://openreview.net/forum?id=B1x1ma4tDr "OpenReview: DDSP"
 [gansynth]: https://arxiv.org/abs/1902.08710 "ArXiV: GANSynth"
