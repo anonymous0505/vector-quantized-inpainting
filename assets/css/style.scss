@@ -102,6 +102,10 @@ audio {
     margin-left: 33.3%;
 }
 
+.main-content > video {
+    width: 100%;
+}
+
 .full-size {
     @media screen and (min-width: 64em) {
         width: 80vw !important;

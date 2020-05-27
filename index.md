@@ -393,6 +393,11 @@ which are played in succession in the audio files presented.
 
 For this first set of experiments, we regenerate the first two seconds of both the top and bottom codemaps in succession.
 
+This amounts to the following interaction on the interactive interface we propose:
+
+<video controls preload="auto" src="{{site.baseurl}}/assets/video/temporal_inpainting.webm" format='video/webm'>
+</video>
+
 The results are presented in the following table.
 
 <div markdown="0">
@@ -436,6 +441,11 @@ The results are presented in the following table.
 In this second set of experiments, we regenerate the lower fourth of both the top and bottom codemaps in succession.
 This transformation can be used to add bottom-frequency content to a sound. In particular, the bass and organ constraints
 with a low pitch constraint allow to bring more depth to a sound, as can be heard on the provided examples.
+
+This amounts to the following interaction on our interactive interface:
+
+<video controls preload="auto" src="{{site.baseurl}}/assets/video/frequency_inpainting.webm" format='video/webm'>
+</video>
 
 Note that we restrict the set of constraint pitches to only the lower ones, relevant to this inpainting task.
 
@@ -481,6 +491,13 @@ In this third and last set of experiments, we keep the top codemap unchanged and
 According to the hierarchical structure of the model, this can be expected to transform the timbre of the sound without changing
 its overall envelope and structure.
 
+This amounts to the following interaction on our interactive interface:
+
+<video controls preload="auto" src="{{site.baseurl}}/assets/video/keep_top_resample_bottom.webm" format='video/webm'>
+</video>
+
+The following table contains the resulting sounds for this set of inpainting operations.
+
 <div markdown="0">
 {% assign instrument_types = "bass, brass, flute, guitar, keyboard, mallet, organ, reed, string, synth_lead, vocal" | split: ", " %}
 {% assign inpainting_sampling_pitches = "24, 36, 43, 48, 60, 64, 67, 72" | split: ", " %}
@@ -516,8 +533,6 @@ its overall envelope and structure.
     </tbody>
 </table>
 </div>
-
-
 
 [vq-vae-2]: https://arxiv.org/abs/1906.00446 "ArXiV: VQ-VAE-2"
 [ddsp]: https://openreview.net/forum?id=B1x1ma4tDr "OpenReview: DDSP"
