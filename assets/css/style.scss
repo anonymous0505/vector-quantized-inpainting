@@ -4,6 +4,7 @@
 @import "{{ site.theme }}";
 
 body {
+    text-align: justify;
     overflow-x: hidden;
 }
 
@@ -36,9 +37,18 @@ body {
     }
     background: rgb(253, 253, 253);
 }
-/* Just common table stuff. Really. */
-table  {
-    // width: 70vw !important;
+
+// applies to every second row of the table
+// FIXME: seems to be incompatible with border-collapse: separate
+.tableDoubleRows tr, .tableDoubleRows td {
+    border-style: dotted;
+    border-width: 2px;
+    border-bottom-width: medium;
+    border-color: inherit;
+}
+
+.tableDoubleRows tr:nth-of-type(2n) {
+    background-color: #ffffd9;
 }
 
 th, td {
@@ -56,6 +66,11 @@ th, td {
 th {
     background:#eee;
     z-index: 1;
+}
+
+.center-table {
+    margin: auto;
+    width: max-content !important;
 }
 
 .main-content table td {

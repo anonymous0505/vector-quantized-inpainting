@@ -112,6 +112,7 @@ p(c^{B} \vert c^{T}) = \prod_i{ p(c^{B}\_i | c^{B}\_{\<i}, c^{T}) }
 The complete inpainting process is represented in this diagram:
 
 ![Placeholder for proposed approach diagram]({{ site.baseurl }}/assets/images/inpainting_process.png)
+{: .full-size}
 
 On the right-hand side of this diagram we can see the inpainting procedure in action:
 
@@ -135,7 +136,7 @@ The following (scrollable) table displays the audio and the spectrograms for the
 We discuss some noticeable artifacts thereafter, using the <span class="highlight wrong">highlighted samples</span> as reference.
 
 <div markdown="0">
-<table class="tableFixHead">
+<table class="tableFixHead tableDoubleRows">
 <colgroup>
 <col/>
 <col/>
@@ -163,35 +164,35 @@ We discuss some noticeable artifacts thereafter, using the <span class="highligh
         {% assign is_keyboard_78 = true %}
         {% assign keyboard_78_path = sample[0] %}
     {% endif %}
-                {% for sample_category in sample_categories %}
+    {% for sample_category in sample_categories %}
     <tr {% if is_string_68 or is_keyboard_78 %} class="highlight wrong" {% endif %}>
         <!-- <td> {{ sample_category | capitalize | truncate: 5, "." }} </td> -->
         <td>
             {{ sample_category | capitalize }}
             <br/>
             <br/>
-                            <audio controls preload="none">
-                                {% for format in formats %}
-                                    <source src="{{ site.baseurl }}/assets/audio/reconstructions/{{ sample[0] }}-{{sample_category}}.{{ format }}"
-                                        alt="sample" type="audio/{{ format }}">
-                                {% endfor %}
-                            </audio>
-                        </td>
-                                        {% for spectrogram_channel in spectrogram_channels %}
-                                            <td>
-                                                <img src="{{ site.baseurl }}/assets/images/reconstructions/{{ sample[0] }}-{{ sample_category }}-{{ spectrogram_channel }}.png"
-                                                    alt="{{ sample[0] }}-{{ sample_category }}-{{ spectrogram_channel }}" width="100%" height="100%"/>
-                                            </td>
-                                        {% endfor %}
-                                    </tr>
+            <audio controls preload="none">
+                {% for format in formats %}
+                    <source src="{{ site.baseurl }}/assets/audio/reconstructions/{{ sample[0] }}-{{sample_category}}.{{ format }}"
+                        alt="sample" type="audio/{{ format }}">
                 {% endfor %}
+            </audio>
+        </td>
+        {% for spectrogram_channel in spectrogram_channels %}
+            <td>
+                <img src="{{ site.baseurl }}/assets/images/reconstructions/{{ sample[0] }}-{{ sample_category }}-{{ spectrogram_channel }}.png"
+                    alt="{{ sample[0] }}-{{ sample_category }}-{{ spectrogram_channel }}" width="100%" height="100%"/>
+            </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+    <!-- <tr> <td> </td> <td> </td> <td> </td> </tr> -->
 {% endfor %}
 </tbody>
 </table>
 </div>
 
 ### Discussion
-{:.no_toc}
 
 From these examples we can note that reconstruction with this highly compressed model
 is good, in the sense the overall timbre is indeed reproduced for each of the samples, yet it is not perfect.
@@ -244,13 +245,13 @@ Some undesired beating effects appear on sustained notes. An instance of this is
                         {% endfor %}
                     </audio>
                 </td>
-                                {% for spectrogram_channel in spectrogram_channels %}
-                                    <td>
-                                        <img src="{{ site.baseurl }}/assets/images/reconstructions/{{ sample_path }}-{{ sample_category }}-{{ spectrogram_channel }}.png"
-                                            alt="{{ sample_path }}-{{ sample_category }}-{{ spectrogram_channel }}" width="100%" height="100%"/>
-                                    </td>
-                                {% endfor %}
-                            </tr>
+                {% for spectrogram_channel in spectrogram_channels %}
+                <td>
+                    <img src="{{ site.baseurl }}/assets/images/reconstructions/{{ sample_path }}-{{ sample_category }}-{{ spectrogram_channel }}.png"
+                        alt="{{ sample_path }}-{{ sample_category }}-{{ spectrogram_channel }}" width="100%" height="100%"/>
+                </td>
+                {% endfor %}
+            </tr>
         {% endfor %}
     </tbody>
 </table>
@@ -302,6 +303,16 @@ In this second set of experiments, we make use of the Transformers and evaluate 
 ability at generating full sounds without receiving any conditioning except
 pitch and instrument type.
 
+For this sampling procedure, we first autoregressively sample the full top map starting from an initial fully
+masked self-conditioning map. We then sample the full bottom codemap conditioned on this top map.
+
+Our conditioning scheme for global labels is a very simple one: one-hot encodings (along with a learned
+embedding matrix) for both pitch and instrument global labels are concatenated
+to each tokens of the sequences, along with the positional embeddings common in sequence modeling.
+This simple approach readily gives the networks access to the global conditioning information at all positions.
+In particular, the global conditioning is concatenated to the start symbols that are prepended to the sequences
+for autoregressive modeling, allowing to condition the full autoregressive sampling procedure.
+
 <div markdown="0">
 {% assign instrument_types = "bass, brass, flute, guitar, keyboard, mallet, organ, reed, string, synth_lead, vocal" | split: ", " %}
 {% assign unconditional_sampling_pitches = "24, 31, 38, 45, 52, 59, 66, 73, 80" | split: ", " %}
@@ -337,6 +348,176 @@ pitch and instrument type.
     </tbody>
 </table>
 </div>
+
+### Discussion
+
+The VQ-VAE/Transformer pair successfully handles pitch and instrument conditioning for the diverse set on instruments in the training set.
+
+We note that it nevertheless sometimes fails to produce the desired pitch, for instance on the Mallet/24 sample,
+where the generated pitch is too high.
+This can be attributed to the fact that pitch 24 is, with 246 occurrences in our train split, one of the least represented
+pitches for the "mallet" instrument family (as shown on the diagram below).
+This, along with the fact that our conditioning scheme imposes no disentanglement of the different conditioning modalities,
+could explain that the networks has a hard time generalizing to this less represented pitch for the given instrument type.
+
+![Histogram of pitches for the Mallet instrument family]({{site.baseurl}}/assets/images/histogram_mallet_pitches.png){:
+    style="width: 80%; margin-left: 10%;"}
+
+## Inpainting operations
+
+We now present some applications of the inpainting capabilities of the masked Transformers.
+Reviewers are invited to try out these manipulations on the interactive web interface we built for our models, the link
+of which is to be found in the paper.
+
+Here, we start from a pre-existing sample, either provided by the user or fully generated by autoregressively
+sampling from the distribution modeled by the Transformers. We then select and resample specific zones in these codemaps,
+which can be done in a context-aware fashion using the masking procedure introduced in the Transformers.
+
+The two different layers of the VQ-VAE allow to perform sonic transformations at different scales.
+By editing the top codemap, on which the bottom codemap is, in turn, conditioned,
+one can perform radical changes on the existing sound
+
+We perform all our demonstrations on the following sample, taken from the official NSynth test split:
+
+|Audio|Name|Instrument family|Pitch|
+|-----|----|-----------------|-----|
+|<audio controls preload='none' src="{{ site.baseurl }}/assets/audio/organ_electronic_028-048-050.wav" format='audio/wav'>|organ_electronic_028-048-050|Organ|48|
+{: .center-table}
+
+We perform different experiments using all instrument types across a wide range of pitch constraints.
+
+For each combination of pitch and instrument constraints in the following tasks, we sample four independent examples from our models,
+which are played in succession in the audio files presented.
+
+### Temporal inpainting
+
+For this first set of experiments, we regenerate the first two seconds of both the top and bottom codemaps in succession.
+
+The results are presented in the following table.
+
+<div markdown="0">
+{% assign instrument_types = "bass, brass, flute, guitar, keyboard, mallet, organ, reed, string, synth_lead, vocal" | split: ", " %}
+{% assign inpainting_sampling_pitches = "24, 36, 43, 48, 60, 64, 67, 72" | split: ", " %}
+<table class="tableFixFirstColumn tableFixHead full-size">
+    <colgroup>
+        <col>
+        {% for pitch in inpainting_sampling_pitches %}
+        <col/>
+        {% endfor %}
+    </colgroup>
+    <thead>
+        <tr class="header">
+        <th> Instrument </th>
+        {% for pitch in inpainting_sampling_pitches %}
+        <th> MIDI Pitch <span markdown="1">\\({{ pitch }}\\)</span> </th>
+        {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+    {% for instrument_type in instrument_types %}
+        <tr>
+        <th> {{ instrument_type | capitalize }} </th>
+        {% for pitch in inpainting_sampling_pitches %}
+            <td>
+                <audio controls
+                 src='{{ site.baseurl }}/assets/audio/masked_inpainting/20200309-220303-d006ab_436/two_seconds_all_frequencies/{{instrument_type}}-{{pitch}}.wav'
+                 preload="none"
+                 format='audio/wav' />
+            </td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+### Frequency inpainting
+
+In this second set of experiments, we regenerate the lower fourth of both the top and bottom codemaps in succession.
+This transformation can be used to add bottom-frequency content to a sound. In particular, the bass and organ constraints
+with a low pitch constraint allow to bring more depth to a sound, as can be heard on the provided examples.
+
+Note that we restrict the set of constraint pitches to only the lower ones, relevant to this inpainting task.
+
+<div markdown="0" style="width: min-content; margin: auto;">
+{% assign instrument_types = "bass, brass, flute, guitar, keyboard, mallet, organ, reed, string, synth_lead, vocal" | split: ", " %}
+{% assign inpainting_sampling_pitches = "24, 36, 43, 48" | split: ", " %}
+<table class="tableFixFirstColumn tableFixHead" style="padding-right: 17px;">
+    <colgroup>
+        <col>
+        {% for pitch in inpainting_sampling_pitches %}
+        <col/>
+        {% endfor %}
+    </colgroup>
+    <thead>
+        <tr class="header">
+        <th> Instrument </th>
+        {% for pitch in inpainting_sampling_pitches %}
+        <th> MIDI Pitch <span markdown="1">\\({{ pitch }}\\)</span> </th>
+        {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+    {% for instrument_type in instrument_types %}
+        <tr>
+        <th> {{ instrument_type | capitalize }} </th>
+        {% for pitch in inpainting_sampling_pitches %}
+            <td>
+                <audio controls
+                 src='{{ site.baseurl }}/assets/audio/masked_inpainting/20200309-220303-d006ab_436/all_duration_bottom_quarter_frequencies/{{instrument_type}}-{{pitch}}.wav'
+                 preload="none"
+                 format='audio/wav' />
+            </td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+### Keep top, regenerate bottom
+
+In this third and last set of experiments, we keep the top codemap unchanged and regenerate the full bottom codemap conditioned on it.
+According to the hierarchical structure of the model, this can be expected to transform the timbre of the sound without changing
+its overall envelope and structure.
+
+<div markdown="0">
+{% assign instrument_types = "bass, brass, flute, guitar, keyboard, mallet, organ, reed, string, synth_lead, vocal" | split: ", " %}
+{% assign inpainting_sampling_pitches = "24, 36, 43, 48, 60, 64, 67, 72" | split: ", " %}
+<table class="tableFixFirstColumn tableFixHead full-size">
+    <colgroup>
+        <col>
+        {% for pitch in inpainting_sampling_pitches %}
+        <col/>
+        {% endfor %}
+    </colgroup>
+    <thead>
+        <tr class="header">
+        <th> Instrument </th>
+        {% for pitch in inpainting_sampling_pitches %}
+        <th> MIDI Pitch <span markdown="1">\\({{ pitch }}\\)</span> </th>
+        {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+    {% for instrument_type in instrument_types %}
+        <tr>
+        <th> {{ instrument_type | capitalize }} </th>
+        {% for pitch in inpainting_sampling_pitches %}
+            <td>
+                <audio controls
+                    src='{{ site.baseurl }}/assets/audio/masked_inpainting/20200309-220303-d006ab_436/keep_top_resample_full_bottom/{{instrument_type}}-{{pitch}}.wav'
+                    preload="none"
+                    format='audio/wav' />
+            </td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+
 
 [vq-vae-2]: https://arxiv.org/abs/1906.00446 "ArXiV: VQ-VAE-2"
 [ddsp]: https://openreview.net/forum?id=B1x1ma4tDr "OpenReview: DDSP"
