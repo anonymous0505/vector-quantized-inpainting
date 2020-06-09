@@ -48,7 +48,7 @@ resulting in even more resolution in the lower frequencies.
 We take the following sound sample as example (sampled from the validation set of our custom NSynth split).
 
 <audio controls preload="none" src="{{ site.baseurl }}/assets/audio/brass_acoustic_040-069-075.wav"
- type="audio/wav" />
+ type="audio/wav"> </audio>
 
 On the following figure, we display the original, GANSynth-style Mel-IF representation for this sound,
 without phase thresholding and mel-scale compression. We also show the associated top and bottom codemaps
@@ -181,7 +181,7 @@ We discuss some noticeable artifacts thereafter, using the <span class="highligh
         {% for spectrogram_channel in spectrogram_channels %}
             <td>
                 <img src="{{ site.baseurl }}/assets/images/reconstructions/{{ sample[0] }}-{{ sample_category }}-{{ spectrogram_channel }}.png"
-                    alt="{{ sample[0] }}-{{ sample_category }}-{{ spectrogram_channel }}" width="100%" height="100%"/>
+                    alt="{{ sample[0] }}-{{ sample_category }}-{{ spectrogram_channel }}" width="100%" height="100%">
             </td>
         {% endfor %}
     </tr>
@@ -248,7 +248,7 @@ Some undesired beating effects appear on sustained notes. An instance of this is
                 {% for spectrogram_channel in spectrogram_channels %}
                 <td>
                     <img src="{{ site.baseurl }}/assets/images/reconstructions/{{ sample_path }}-{{ sample_category }}-{{ spectrogram_channel }}.png"
-                        alt="{{ sample_path }}-{{ sample_category }}-{{ spectrogram_channel }}" width="100%" height="100%"/>
+                        alt="{{ sample_path }}-{{ sample_category }}-{{ spectrogram_channel }}" width="100%" height="100%" >
                 </td>
                 {% endfor %}
             </tr>
@@ -340,7 +340,8 @@ for autoregressive modeling, allowing to condition the full autoregressive sampl
                 <audio controls
                  src='{{ site.baseurl }}/assets/audio/unconditional_generation/20200309-220303-d006ab_436/{{instrument_type}}-{{pitch}}.wav'
                  preload="none"
-                 format='audio/wav' />
+                 format='audio/wav'>
+                </audio>
             </td>
         {% endfor %}
         </tr>
@@ -427,7 +428,8 @@ The results are presented in the following table.
                 <audio controls
                  src='{{ site.baseurl }}/assets/audio/masked_inpainting/20200309-220303-d006ab_436/two_seconds_all_frequencies/{{instrument_type}}-{{pitch}}.wav'
                  preload="none"
-                 format='audio/wav' />
+                 format='audio/wav'>
+                </audio>
             </td>
         {% endfor %}
         </tr>
@@ -476,7 +478,8 @@ Note that we restrict the set of constraint pitches to only the lower ones, rele
                 <audio controls
                  src='{{ site.baseurl }}/assets/audio/masked_inpainting/20200309-220303-d006ab_436/all_duration_bottom_quarter_frequencies/{{instrument_type}}-{{pitch}}.wav'
                  preload="none"
-                 format='audio/wav' />
+                 format='audio/wav' >
+                </audio>
             </td>
         {% endfor %}
         </tr>
@@ -525,7 +528,8 @@ The following table contains the resulting sounds for this set of inpainting ope
                 <audio controls
                     src='{{ site.baseurl }}/assets/audio/masked_inpainting/20200309-220303-d006ab_436/keep_top_resample_full_bottom/{{instrument_type}}-{{pitch}}.wav'
                     preload="none"
-                    format='audio/wav' />
+                    format='audio/wav' >
+                </audio>
             </td>
         {% endfor %}
         </tr>
