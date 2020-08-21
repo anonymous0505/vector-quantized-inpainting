@@ -1,6 +1,6 @@
 theme: jekyll-theme-cayman
 title: Interactive Generation Of Spectrograms With Vector-Quantized Inpainting
-description: "This is the companion website for the eponymous anonymous ISMIR submission"
+description: "This is the companion website for the eponymous anonymous submission"
 github: [metadata]
 
 markdown: kramdown
