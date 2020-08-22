@@ -488,7 +488,7 @@ Note that we restrict the set of constraint pitches to only the lower ones, rele
 </table>
 </div>
 
-### Keep top, regenerate bottom
+### Keep the top, regenerate the bottom
 
 In this third and last set of experiments, we keep the top codemap unchanged and regenerate the full bottom codemap conditioned on it.
 According to the hierarchical structure of the model, this can be expected to transform the timbre of the sound without changing
