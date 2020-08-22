@@ -1,5 +1,5 @@
 ---
-title: Interactive Generation Of Spectrograms With Vector-Quantized Inpainting
+title: Spectrogram Inpainting for Interactive Generation of Instrument Sounds
 layout: default
 ---
 
